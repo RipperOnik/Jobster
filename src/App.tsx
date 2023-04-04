@@ -1,25 +1,40 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React from "react";
+import { Landing, Error, RegisterOrLogin, ProtectedRoute } from "./pages";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import {
+  Profile,
+  AddJob,
+  AllJobs,
+  Stats,
+  SharedLayout,
+} from "./pages/dashboard";
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
+    <BrowserRouter>
+      <Routes>
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute>
+              <SharedLayout />
+            </ProtectedRoute>
+          }
         >
-          Learn React
-        </a>
-      </header>
-    </div>
+          <Route index element={<Stats />} />
+          <Route path="all-jobs" element={<AllJobs />} />
+          <Route path="add-job" element={<AddJob />} />
+          <Route path="profile" element={<Profile />} />
+        </Route>
+        <Route path="/landing" element={<Landing />} />
+        <Route path="/register" element={<RegisterOrLogin type="register" />} />
+        <Route path="/login" element={<RegisterOrLogin type="login" />} />
+        <Route path="*" element={<Error />} />
+      </Routes>
+      <ToastContainer position="top-center" />
+    </BrowserRouter>
   );
 }
 
