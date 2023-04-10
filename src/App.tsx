@@ -1,6 +1,6 @@
 import React from "react";
 import { Landing, Error, RegisterOrLogin, ProtectedRoute } from "./pages";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, HashRouter, Route, Routes } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import {
@@ -13,7 +13,7 @@ import {
 
 function App() {
   return (
-    <BrowserRouter>
+    <HashRouter>
       <Routes>
         <Route
           path="/"
@@ -34,7 +34,7 @@ function App() {
         <Route path="*" element={<Error />} />
       </Routes>
       <ToastContainer position="top-center" />
-    </BrowserRouter>
+    </HashRouter>
   );
 }
 
