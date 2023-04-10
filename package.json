@@ -1,5 +1,6 @@
 {
   "name": "jobster",
+  "homepage": "http://RipperOnik.github.io/Jobster",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
