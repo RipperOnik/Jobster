@@ -1,6 +1,8 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import { toast } from "react-toastify";
-import customFetch from "../../utils/axious";
+import customFetch, { checkForUnauthorizedRequest } from "../../utils/axious";
+import { clearAllJobsState } from "../allJobs/allJobsSlice";
+import { clearValues } from "../job/jobSlice";
 
 import {
   addUserToLocalStorage,
@@ -86,13 +88,26 @@ export const updateUser = createAsyncThunk<
     });
     return resp.data;
   } catch (error: MyKnownError | any) {
-    if (error.response.status === 401) {
-      thunkApi.dispatch(logoutUser());
-      return thunkApi.rejectWithValue("Unauthorized! Logging out...");
-    }
-    return thunkApi.rejectWithValue(error.response.data.msg);
+    return checkForUnauthorizedRequest(error, thunkApi);
   }
 });
+export const clearStore = createAsyncThunk<any, string | undefined>(
+  "user/clearStore",
+  async (message, thunkAPI) => {
+    try {
+      // logout user
+      thunkAPI.dispatch(logoutUser(message));
+      // clear jobs value
+      thunkAPI.dispatch(clearAllJobsState());
+      // clear job input values
+      thunkAPI.dispatch(clearValues());
+      return Promise.resolve();
+    } catch (error) {
+      // console.log(error);
+      return Promise.reject();
+    }
+  }
+);
 
 const userSlice = createSlice({
   name: "user",
@@ -169,6 +184,9 @@ const userSlice = createSlice({
       .addCase(updateUser.rejected, (state: UserState, { payload }) => {
         state.isLoading = false;
         toast.error(payload);
+      })
+      .addCase(clearStore.rejected, () => {
+        toast.error("There was an error");
       });
   },
 });

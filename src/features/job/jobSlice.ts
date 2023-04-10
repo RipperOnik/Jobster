@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import { toast } from "react-toastify";
-import customFetch from "../../utils/axious";
+import customFetch, { checkForUnauthorizedRequest } from "../../utils/axious";
 import { getUserFromLocalStorage } from "../../utils/localStorage";
 import { AppDispatch } from "../../store";
 import { logoutUser } from "../user/userSlice";
@@ -65,12 +65,7 @@ export const createJob = createAsyncThunk<
     thunkAPI.dispatch(clearValues());
     return resp.data;
   } catch (error: any) {
-    // logout user
-    if (error.response.status === 401) {
-      thunkAPI.dispatch(logoutUser());
-      return thunkAPI.rejectWithValue("Unauthorized! Logging Out...");
-    }
-    return thunkAPI.rejectWithValue(error.response.data.msg);
+    return checkForUnauthorizedRequest(error, thunkAPI);
   }
 });
 
@@ -94,7 +89,7 @@ export const deleteJob = createAsyncThunk<
     return resp.data.msg;
   } catch (error: any) {
     thunkAPI.dispatch(hideLoading());
-    return thunkAPI.rejectWithValue(error.response.data.msg);
+    return checkForUnauthorizedRequest(error, thunkAPI);
   }
 });
 interface EditJob {
@@ -118,7 +113,7 @@ export const editJob = createAsyncThunk<
     });
     thunkAPI.dispatch(clearValues());
   } catch (error: any) {
-    return thunkAPI.rejectWithValue(error.response.data.msg);
+    return checkForUnauthorizedRequest(error, thunkAPI);
   }
 });
 

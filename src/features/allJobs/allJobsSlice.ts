@@ -1,6 +1,6 @@
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import { toast } from "react-toastify";
-import customFetch from "../../utils/axious";
+import customFetch, { checkForUnauthorizedRequest } from "../../utils/axious";
 import { AppDispatch } from "../../store";
 
 const initialFiltersState: InitialFilterState = {
@@ -24,8 +24,8 @@ interface AllJobsState extends InitialFilterState {
   totalJobs: number;
   numOfPages: number;
   page: number;
-  stats: {};
-  monthlyApplications: [];
+  stats?: Stats;
+  monthlyApplications: MonthlyApplication[];
 }
 interface Job {
   company: string;
@@ -52,7 +52,6 @@ const initialState: AllJobsState = {
   totalJobs: 0,
   numOfPages: 1,
   page: 1,
-  stats: {},
   monthlyApplications: [],
   ...initialFiltersState,
 };
@@ -66,7 +65,13 @@ export const getAllJobs = createAsyncThunk<
     dispatch: AppDispatch;
   }
 >("allJobs/getJobs", async (_, thunkAPI) => {
-  let url = `/jobs`;
+  const { page, search, searchStatus, searchType, sort } =
+    thunkAPI.getState().allJobs;
+
+  let url = `/jobs?status=${searchStatus}&jobType=${searchType}&sort=${sort}&page=${page}`;
+  if (search) {
+    url += `&search=${search}`;
+  }
 
   try {
     const resp = await customFetch.get(url, {
@@ -76,9 +81,50 @@ export const getAllJobs = createAsyncThunk<
     });
     return resp.data;
   } catch (error: any) {
+    return checkForUnauthorizedRequest(error, thunkAPI);
+  }
+});
+
+interface StateResponseData {
+  defaultStats: Stats;
+  monthlyApplications: MonthlyApplication[];
+}
+interface Stats {
+  pending: number;
+  interview: number;
+  declined: number;
+}
+export interface MonthlyApplication {
+  date: string;
+  count: number;
+}
+
+export const showStats = createAsyncThunk<
+  StateResponseData,
+  undefined,
+  {
+    rejectValue: string;
+    state: any;
+    dispatch: AppDispatch;
+  }
+>("allJobs/showStats", async (_, thunkAPI) => {
+  try {
+    const resp = await customFetch.get("/jobs/stats", {
+      headers: {
+        authorization: `Bearer ${thunkAPI.getState().user.user.token}`,
+      },
+    });
+    return resp.data;
+  } catch (error: any) {
     return thunkAPI.rejectWithValue(error.response.data.msg);
   }
 });
+
+export type Name = "searchStatus" | "searchType" | "sort" | "search";
+export interface ChangeAction {
+  name: Name;
+  value: string;
+}
 
 const allJobsSlice = createSlice({
   name: "allJobs",
@@ -90,6 +136,22 @@ const allJobsSlice = createSlice({
     hideLoading: (state) => {
       state.isLoading = false;
     },
+    handleChange: (
+      state,
+      { payload: { name, value } }: PayloadAction<ChangeAction>
+    ) => {
+      state.page = 1;
+      state[name] = value;
+    },
+    clearFilters: (state) => {
+      return { ...state, ...initialFiltersState };
+    },
+    changePage: (state, { payload }: PayloadAction<number>) => {
+      state.page = payload;
+    },
+    clearAllJobsState: () => {
+      return initialState;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -99,13 +161,34 @@ const allJobsSlice = createSlice({
       .addCase(getAllJobs.fulfilled, (state, { payload }) => {
         state.isLoading = false;
         state.jobs = payload.jobs;
+        state.numOfPages = payload.numOfPages;
+        state.totalJobs = payload.totalJobs;
       })
       .addCase(getAllJobs.rejected, (state, { payload }) => {
+        state.isLoading = false;
+        toast.error(payload);
+      })
+      .addCase(showStats.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(showStats.fulfilled, (state, { payload }) => {
+        state.isLoading = false;
+        state.stats = payload.defaultStats;
+        state.monthlyApplications = payload.monthlyApplications;
+      })
+      .addCase(showStats.rejected, (state, { payload }) => {
         state.isLoading = false;
         toast.error(payload);
       });
   },
 });
-export const { showLoading, hideLoading } = allJobsSlice.actions;
+export const {
+  showLoading,
+  hideLoading,
+  handleChange,
+  clearFilters,
+  changePage,
+  clearAllJobsState,
+} = allJobsSlice.actions;
 
 export default allJobsSlice.reducer;
