@@ -1,16 +1,16 @@
 {
   "files": {
     "main.css": "/Jobster/static/css/main.ad9b3898.css",
-    "main.js": "/Jobster/static/js/main.9d931fb4.js",
+    "main.js": "/Jobster/static/js/main.404587f4.js",
     "static/media/main.svg": "/Jobster/static/media/main.17b316de742b3a1202078c5ae18c8261.svg",
     "static/media/not-found.svg": "/Jobster/static/media/not-found.5cfa24fa5e3ca7dffe02f358358ea9df.svg",
     "static/media/logo.svg": "/Jobster/static/media/logo.35bb8e1d9b5745af32ff148cbee51dfa.svg",
     "index.html": "/Jobster/index.html",
     "main.ad9b3898.css.map": "/Jobster/static/css/main.ad9b3898.css.map",
-    "main.9d931fb4.js.map": "/Jobster/static/js/main.9d931fb4.js.map"
+    "main.404587f4.js.map": "/Jobster/static/js/main.404587f4.js.map"
   },
   "entrypoints": [
     "static/css/main.ad9b3898.css",
-    "static/js/main.9d931fb4.js"
+    "static/js/main.404587f4.js"
   ]
 }
